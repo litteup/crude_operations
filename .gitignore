@@ -1,0 +1,7 @@
+node_modules
+.env
+*.rest
+*.http
+package-lock.json
+package.json
+the_task.txt
