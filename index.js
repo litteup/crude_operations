@@ -13,6 +13,7 @@ const port = process.env.PORT || 5000;
 // middleware
 
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 app.use("/v1/tasks", taskRoute);
 app.use("/v1/auth",authRoute);
