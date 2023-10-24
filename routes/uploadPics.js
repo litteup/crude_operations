@@ -20,11 +20,13 @@ router.post("/pic", upload.single("file"), async(req,res)=>{
 
     const {taskTitle, taskBody} = req.body;
     const {originalname} = req.file;
+    const {userId} = req.decoded;
 
     const newTask = await taskCollection.create({
         taskTitle,
         taskBody,
-        pictureName: originalname
+        pictureName: originalname,
+        user: userId
     });
 
     res.send({
