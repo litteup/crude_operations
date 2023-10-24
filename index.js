@@ -3,6 +3,8 @@ const env = require('dotenv').config();
 const mongoose = require('mongoose');
 const taskRoute = require('./routes/tasks');
 const authRoute = require('./routes/auth');
+const path = require('path');
+const taskWithPicture = require('./routes/uploadPics');
 
 
 
@@ -14,9 +16,11 @@ const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+app.use(express.static(path.join(__dirname,"public")));
 
 app.use("/v1/tasks", taskRoute);
 app.use("/v1/auth",authRoute);
+app.use("/v1/upload-pic", taskWithPicture);
 
 
 //connect to mongodb
