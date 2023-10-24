@@ -31,7 +31,8 @@ router.post("/pic", upload.single("file"), async(req,res)=>{
 
     res.send({
         Sucessful: true,
-        newTask
+        newTask,
+        fileDetails: req.file
     });
 
     
