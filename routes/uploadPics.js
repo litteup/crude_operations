@@ -16,13 +16,15 @@ router.use(isUserLoggedIn);
 
 router.post("/pic", upload.single("file"), async(req,res)=>{
 
+   try {
+
     const {taskTitle, taskBody} = req.body;
-    const {filename} = req.file;
+    const {originalname} = req.file;
 
     const newTask = await taskCollection.create({
         taskTitle,
         taskBody,
-        pictureName: filename
+        pictureName: originalname
     });
 
     res.send({
@@ -30,6 +32,10 @@ router.post("/pic", upload.single("file"), async(req,res)=>{
         newTask
     });
 
+    
+   } catch (error) {
+    console.log(`Error encountered while uploading picture.\nError: ${error}`)
+   }
 });
 
 
