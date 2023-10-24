@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const upload = require({dest: "public/"});
+const upload = multer({dest: "public/"});
 const {taskCollection} = require('../schema/taskSchema');
 const {isUserLoggedIn, adminsOnly} = require('./middlewares');
 
