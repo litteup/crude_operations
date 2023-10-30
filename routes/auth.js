@@ -5,10 +5,26 @@ const bcrypt = require('bcrypt');
 const jwt =  require('jsonwebtoken');
 const { taskCollection } = require('../schema/taskSchema');
 const { isUserLoggedIn } = require('./middlewares');
-const env = require('dotenv').config();
+require('dotenv').config();
+const {send} = require("../utilities/sendEmail");
+const{v4: uuidv4} = require('uuid');
+const {forgetPasswordCollection} = require("../schema/forgetPassword");
+const joi = require('joi');
 
 
 router.post('/register', async(req, res) =>{
+
+    const registerValidationSchema = joi.object({
+        fullname: joi.string().required(),
+        email: joi.string().email().required(),
+        role: joi.string(),
+        password: joi.string().min(6).required()
+    });
+
+    const {error: registerValidationError} = registerValidationSchema.validate(req.body);
+
+    if(registerValidationError) return res.send(registerValidationError);
+
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(req.body.password,salt);
     await userCollection.create({
@@ -26,6 +42,16 @@ router.post('/register', async(req, res) =>{
 router.post("/login", async (req, res) =>{
 
     const {email, password} = req.body;
+
+    const loginValidationSchema = joi.object({
+        email: joi.string().email().required(),
+        password : joi.string().required().min(6).max(30)
+    });
+
+    const {error: validationError} = loginValidationSchema.validate({email, password});
+
+    if (validationError) return res.send(validationError);
+
     const userDetail = await userCollection.findOne({email});
 
     if(!userDetail) return res.status(404).send("user-not-found");
@@ -48,6 +74,124 @@ router.post("/login", async (req, res) =>{
     });
 
 });
+
+
+// Send Reset password mail
+
+router.post("/forget-password", async(req, res)=>{
+    try {
+
+        const {email} = req.body;
+
+        const emailValidation = joi.string().email().required().messages({
+            "string.email": "Email is not valid",
+            "any.required": "'email' field is required."
+        });
+
+        await emailValidation.validateAsync(email);
+
+        const user = await userCollection.findOne({email});
+
+        if(!user) return res.status(404).send("no-user-found");
+
+        const uid = uuidv4();
+
+        await forgetPasswordCollection.create({
+            userId: user._id,
+            token: uid
+        });
+        
+        // nodemailer.sendMail({
+        //     from: "passwordReset@mail.com",
+        //     to: email,
+        //     subject: "Password Reset",
+        //     html: `<div>
+        //                 <h1>Password Reset</h1>
+        //                 <div>Click <a href="">here<a> to reset your password</div>
+        //                 <div>or use this UID ${uid}</div>
+
+        //           </div>`
+        // });
+
+        const mailOptions = {
+            from: "passwordReset@mail.com",
+            to: email,
+            subject: "Password Reset",
+            html: `<div>
+                        <h1>Password Reset</h1>
+                        <div>Click <a href="">here<a> to reset your password</div>
+                        <div>or use this UID:  ${uid}</div>
+
+                  </div>`
+        };
+
+        send.sendMail(mailOptions, (err, result) =>{
+            if(err){
+                console.log(err);
+                res.json('Error occurred sending reset mail.');
+            }else{
+                res.json("Reset email sent successfully.");
+            }
+        });
+
+
+
+    } catch (error) {
+        console.log(error);
+        res.status(error.status || 500).send(error.message || "Internal server error");
+
+    }
+
+});
+
+// Controller to reset the password
+
+router.put("/password-reset", async(req, res)=>{
+    
+    try {
+
+        const {newPassword, token} = req.body;
+
+        
+        const user = await forgetPasswordCollection.findOne({token});
+        
+               
+        if(!user) return res.status(400).send("Invalid-token");
+
+        const newHashedPassword = bcrypt.hashSync(req.body.password, bcrypt.genSaltSync(10));
+
+        
+        await userCollection.findByIdAndUpdate(user.userId,{
+            password: newHashedPassword
+            
+        });
+        
+
+        await forgetPasswordCollection.findOneAndDelete({token});
+
+        res.send({
+            message: "Password changed successfully"
+        });
+        console.log("Password changed successfully.");
+
+
+        
+    } catch (error) {
+        console.log(error);
+        res.status(error.status || 500).send(error.message || "Internal server error");
+
+
+    }
+});
+
+
+
+
+
+
+
+
+
 
 // router to get all users and it is open to all, just for testing purposes and not part of the program 
 

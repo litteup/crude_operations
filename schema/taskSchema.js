@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 //Steps to creating a schema
 // 1. create a schema
@@ -29,6 +30,7 @@ const taskSchema = new mongoose.Schema({
 }, {timestamps: true});
 
 
+taskSchema.plugin(mongoosePaginate); // telling mongoose we are using it for paginate
 
 //creating a model
 

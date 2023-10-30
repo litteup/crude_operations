@@ -6,14 +6,15 @@ const {taskCollection} = require('../schema/taskSchema');
 const {isUserLoggedIn, adminsOnly} = require('./middlewares');
 const cloudinary = require('cloudinary').v2;
 const path  = require('path');
+require('dotenv').config();
 
 
 // import {v2 as cloudinary} from 'cloudinary';
           
 cloudinary.config({ 
-  cloud_name: 'dk0e4vcxx', 
-  api_key: '726553471632846', 
-  api_secret: 'YZFj-z77iLq8M9XFH9XLw32RwaA' ,
+  cloud_name: process.env.CLOUDINARY_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET,
   //secure : true
 });
 

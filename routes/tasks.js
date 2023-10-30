@@ -29,6 +29,15 @@ route.post('/', async(req,res) =>{
     });
 });
 
+// To get tasks for a user
+
+route.get("/user-task/:page?/:limit?", async(req, res)=>{
+    const userTask = await taskCollection.paginate({user: req.decoded.userId}, {page: req.params.page || 1, limit: req.params.limit || 5});
+
+    res.send(userTask);
+
+}); 
+
 route.get("/id/:id", async(req,res) => {
     try {
         const task = await taskCollection.findById(req.params.id);
@@ -90,8 +99,8 @@ route.delete("/delete/:id", async(req,res) =>{
     }
 });
 
-route.get("/admin/all-tasks", adminsOnly, async(req,res)=>{
-    const tasks =  await taskCollection.find();
+route.get("/admin/all-tasks/:page?/:limit?", adminsOnly, async(req,res)=>{
+    const tasks =  await taskCollection.paginate({},{page:req.params.page || 1, limit: req.params.limit || 4});
     res.send(tasks);
 });
 
